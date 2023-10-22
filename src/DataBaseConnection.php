@@ -21,6 +21,24 @@ final class DataBaseConnection {
 
         $this->createTableTeste();
 
+        $this->insertMetaDataIntoTeste();
+    }
+
+    private function dropTableTeste() {
+        $dropTableSQL = "DROP TABLE IF EXISTS teste";
+        pg_query($this->connection, $dropTableSQL);
+    }
+
+    private function createTableTeste(): void {
+        $createTableSQL = "CREATE TABLE teste (
+            id serial PRIMARY KEY,
+            A int,
+            B int
+        )";
+        pg_query($this->connection, $createTableSQL);
+    }
+
+    private function insertMetaDataIntoTeste(): void {
         $metaDados = json_decode(file_get_contents("dados/metadado.json"));
         $dados = (array) $metaDados->table;
         $length = count($dados["id"]);
@@ -36,24 +54,12 @@ final class DataBaseConnection {
             $this->insertRow($row);
         }
         var_dump($rows);
+
     }
+
     private function insertRow(array $row): void {
         $insert = "INSERT INTO teste (id, A, B) 
             VALUES(". $row['id'] . "," . $row['A'] . "," . $row['B'] . ")";
         pg_query($this->connection, $insert);
-    }
-
-    private function dropTableTeste() {
-        $dropTableSQL = "DROP TABLE IF EXISTS teste";
-        pg_query($this->connection, $dropTableSQL);
-    }
-
-    private function createTableTeste(): void {
-        $createTableSQL = "CREATE TABLE teste (
-            id serial PRIMARY KEY,
-            A int,
-            B int
-        )";
-        pg_query($this->connection, $createTableSQL);
     }
 }
