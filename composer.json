@@ -1,6 +1,6 @@
 {
     "name": "logs/bd2",
-    "description": "Trabalho de bd2",
+    "description": "Trabalho de logs de BD2",
     "autoload": {
         "psr-4": {
             "Logs\\Bd2\\": "src/"
