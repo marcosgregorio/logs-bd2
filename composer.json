@@ -1,0 +1,18 @@
+{
+    "name": "logs/bd2",
+    "description": "Trabalho de bd2",
+    "autoload": {
+        "psr-4": {
+            "Logs\\Bd2\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "marcosgregorio",
+            "email": "marquinhogreg2013@gmail.com"
+        }
+    ],
+    "require": {
+        "vanilla/garden-cli": "~4.0"
+    }
+}
