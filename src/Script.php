@@ -3,29 +3,35 @@
 require_once 'DataBaseConnection.php';
 require_once 'Log.php';
 
-class Script {
+final class Script {
     private DataBaseConnection $db;
+    private Log $log;
+    private array $trasactionsWithoutCommit;
+    private array $operationsWithoutCommit;
 
     public function __construct(Type $var = null) {
-        $this->var = $var;
+        $this->createTableFromMetaData();
+    }
+
+    public function __destruct() {
+        unset($this->db, $this->log);
     }
 
     private function createTableFromMetaData(): void {
-        $db = new DataBaseConnection();
+        $this->db = new DataBaseConnection();
         echo "Criação da tabela finalizada..." . PHP_EOL;
     }
 
     public function readLogFile(): void {
-        $log = new Log("dados/entradaLog.txt");
-        $linesBackwards = $log->getLogLinesBackwards();
-        processLogs($linesBackwards);
-        unset($log);
+        $this->log = new Log("dados/entradaLog.txt");
+        $linesBackwards = $this->log->getLogLinesBackwards();
+        $this->processLogs($linesBackwards);
     }
 
     private function processLogs(array $lines): void {
-        $trasactionsWithoutCommit = getTransactionsWithoutCommit($lines);
-        $operationsWithoutCommit = getOperationsFromTransactions($trasactionsWithoutCommit, ($lines));
-        handleUndoOperations($operationsWithoutCommit);
+        $this->trasactionsWithoutCommit = $this->getTransactionsWithoutCommit($lines);
+        $this->operationsWithoutCommit = $this->getOperationsFromTransactions($lines);
+        $this->handleUndoOperations();
     }
 
     private function getTransactionsWithoutCommit(array $lines): array {
@@ -46,9 +52,9 @@ class Script {
         return $trasactionsWithoutCommit;
     }
 
-    private function getOperationsFromTransactions(array $transactions, array $lines): array {
+    private function getOperationsFromTransactions(array $lines): array {
         $operations = [];
-        foreach ($transactions as $key => $t) {
+        foreach ($this->trasactionsWithoutCommit as $key => $t) {
             $operations[] = array_filter($lines, function ($linha) use($t) {
                 return strpos($linha, "<$t") !== false;
             });
@@ -57,8 +63,8 @@ class Script {
         return $operations;
     }
 
-    private function handleUndoOperations(array $operations) {
-        foreach ($operations as $operation) {
+    private function handleUndoOperations() {
+        foreach ($this->operationsWithoutCommit as $operation) {
             $pattern = '/<([^>]*)>/'; 
 
             $firstTransaction = end($operation);
@@ -68,7 +74,7 @@ class Script {
                 if (!empty($match)) {
                     [$transaction, $id, $column, $value] = explode(',', $matches[1]);
                     $column = trim($column);
-                    echo "Transacao: $transaction \n $id  \n $column \n $value\n ";
+                    echo "Transacao: $transaction, id: $id, coluna: $column, valor: $value\n ";
                     $undoSQL = "UPDATE teste SET $column = $value WHERE id = $id";
                 // pg_query($db->connection, $undoSQL);
                 }
