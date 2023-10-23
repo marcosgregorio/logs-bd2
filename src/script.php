@@ -1,8 +1,24 @@
 <?php
 
 require_once 'DataBaseConnection.php';
-function createTableFromMetaData() {
-    $db = new DataBaseConnection();
-    $dados = file_get_contents('dados/metadados.json');
-    echo "$dados\n";
+require_once 'Log.php';
+
+function createTableFromMetaData(): void {
+    new DataBaseConnection();
+    echo "Criação da tabela finalizado..." . PHP_EOL;
+}
+
+function readLogFile(): void {
+    $log = new Log("dados/entradaLog.txt");
+    $lines = $log->getLogLinesBackwards();
+    processLogs($lines);
+}
+
+function processLogs(array $lines): void {
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if (strpos($line, "")) {
+            
+        }
+    }
 }

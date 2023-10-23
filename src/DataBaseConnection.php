@@ -25,17 +25,27 @@ final class DataBaseConnection {
     }
 
     private function dropTableTeste() {
-        $dropTableSQL = "DROP TABLE IF EXISTS teste";
-        pg_query($this->connection, $dropTableSQL);
+        try {
+            $dropTableSQL = "DROP TABLE IF EXISTS teste";
+            pg_query($this->connection, $dropTableSQL);
+        } catch (Throwable $th) {
+            echo "Ocorreu um erro ao dropar a tabela" . PHP_EOL;
+            throw $th;
+        }
     }
 
     private function createTableTeste(): void {
-        $createTableSQL = "CREATE TABLE teste (
-            id serial PRIMARY KEY,
-            A int,
-            B int
-        )";
-        pg_query($this->connection, $createTableSQL);
+        try {
+            $createTableSQL = "CREATE TABLE teste (
+                id serial PRIMARY KEY,
+                A int,
+                B int
+            )";
+            pg_query($this->connection, $createTableSQL);
+        } catch (Throwable $th) {
+            echo "Ocorreu um erro ao criar a tabela!" . PHP_EOL;
+            throw $th;
+        }
     }
 
     private function insertMetaDataIntoTeste(): void {
@@ -53,13 +63,16 @@ final class DataBaseConnection {
         foreach ($rows as $row) {
             $this->insertRow($row);
         }
-        var_dump($rows);
-
     }
 
     private function insertRow(array $row): void {
-        $insert = "INSERT INTO teste (id, A, B) 
-            VALUES(". $row['id'] . "," . $row['A'] . "," . $row['B'] . ")";
-        pg_query($this->connection, $insert);
+        try {
+            $insert = "INSERT INTO teste (id, A, B) 
+                VALUES(". $row['id'] . "," . $row['A'] . "," . $row['B'] . ")";
+            pg_query($this->connection, $insert);
+        } catch (Throwable $th) {
+            echo "Ocorreu um erro ao inserir dados na tabela!" . PHP_EOL;
+            throw $th;
+        }
     }
 }
