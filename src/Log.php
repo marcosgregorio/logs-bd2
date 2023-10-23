@@ -22,4 +22,8 @@ final class Log {
         
         return $lines;
     }
+
+    public function __destruct() {
+        fclose($this->file);
+    }
 }

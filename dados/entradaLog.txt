@@ -1,16 +1,11 @@
 <start T1>
-<T1,1,A,20,2000>
+<T1,1, A,20>
 <start T2>
-<T2,1,B,55,1000>
-<commit T2>
-<start T3>
-<T3,2,B,30,1000>
 <commit T1>
+<START CKPT(T2)>
+<T2,2, B,20>
+<commit T2>
+<END CKPT>
+<start T3>
 <start T4>
-<T4,1,A,2000,3000>
-<start T5>
-<CKPT (T3,T4,T5)>
-<commit T4>
-<T5,2,A,20,1000>
-<T3,2,B,1000,8000>
-<crash>
+<T4,1, B,55>
