@@ -4,22 +4,20 @@ require_once 'DataBaseConnection.php';
 require_once 'Log.php';
 
 function createTableFromMetaData(): void {
-    new DataBaseConnection();
+    global $db = new DataBaseConnection();
     echo "Criação da tabela finalizado..." . PHP_EOL;
 }
 
 function readLogFile(): void {
     $log = new Log("dados/entradaLog.txt");
-    $lines = $log->getLogLines();
-    processLogs($lines);
-    // $linesBackwards = $log->getLogLinesBackwards();
-    // processLogs($linesBackwards);
+    $linesBackwards = $log->getLogLinesBackwards();
+    processLogs($linesBackwards);
 }
 
 function processLogs(array $lines): void {
-    $newArray = $lines;
     $trasactionsWithoutCommit = getTransactionsWithoutCommit($lines);
-    $operationsWithoutCommit =getOperationsFromTransactions($trasactionsWithoutCommit, ($lines));
+    $operationsWithoutCommit = getOperationsFromTransactions($trasactionsWithoutCommit, ($lines));
+    handleUndoOperations($operationsWithoutCommit);
 }
 
 function getTransactionsWithoutCommit(array $lines): array {
@@ -49,4 +47,15 @@ function getOperationsFromTransactions(array $transactions, array $lines): array
     }
     
     return $operations;
+}
+
+function handleUndoOperations(array $operations) {
+    foreach ($operations as $operation) {
+        $pattern = '/<([^>]*)>/'; 
+
+        $firstTransaction = end($operation);
+        [$transaction, $id, $column, $value] = explode(',', $firstTransaction);
+        $undoSQL = "UPDATE teste SET $column = $value WHERE id = $id";
+        pg_query($db->connection, $undoSQL);
+    }
 }
