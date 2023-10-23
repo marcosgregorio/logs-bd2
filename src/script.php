@@ -3,59 +3,76 @@
 require_once 'DataBaseConnection.php';
 require_once 'Log.php';
 
-function createTableFromMetaData(): void {
-    global $db = new DataBaseConnection();
-    echo "Criação da tabela finalizado..." . PHP_EOL;
-}
+class Script {
+    private DataBaseConnection $db;
 
-function readLogFile(): void {
-    $log = new Log("dados/entradaLog.txt");
-    $linesBackwards = $log->getLogLinesBackwards();
-    processLogs($linesBackwards);
-}
+    public function __construct(Type $var = null) {
+        $this->var = $var;
+    }
 
-function processLogs(array $lines): void {
-    $trasactionsWithoutCommit = getTransactionsWithoutCommit($lines);
-    $operationsWithoutCommit = getOperationsFromTransactions($trasactionsWithoutCommit, ($lines));
-    handleUndoOperations($operationsWithoutCommit);
-}
+    private function createTableFromMetaData(): void {
+        $db = new DataBaseConnection();
+        echo "Criação da tabela finalizada..." . PHP_EOL;
+    }
 
-function getTransactionsWithoutCommit(array $lines): array {
-    $trasactionsWithoutCommit = [];
-    $str = implode($lines);
-    foreach ($lines as $key => $line) {
-        $line = trim($line);
-        if (strpos($line, "start")) {
-            $transaction = substr($line, -3, 2);
-            $regex = "/<commit $transaction>/";
-            $dontHaveCommit = !preg_match($regex, $str);
-            if ($dontHaveCommit) {
-                echo "Transação $transaction realizou UNDO" . PHP_EOL;
-                $trasactionsWithoutCommit[] = $transaction; 
+    public function readLogFile(): void {
+        $log = new Log("dados/entradaLog.txt");
+        $linesBackwards = $log->getLogLinesBackwards();
+        processLogs($linesBackwards);
+        unset($log);
+    }
+
+    private function processLogs(array $lines): void {
+        $trasactionsWithoutCommit = getTransactionsWithoutCommit($lines);
+        $operationsWithoutCommit = getOperationsFromTransactions($trasactionsWithoutCommit, ($lines));
+        handleUndoOperations($operationsWithoutCommit);
+    }
+
+    private function getTransactionsWithoutCommit(array $lines): array {
+        $trasactionsWithoutCommit = [];
+        $str = implode($lines);
+        foreach ($lines as $key => $line) {
+            $line = trim($line);
+            if (strpos($line, "start")) {
+                $transaction = substr($line, -3, 2);
+                $regex = "/<commit $transaction>/";
+                $dontHaveCommit = !preg_match($regex, $str);
+                if ($dontHaveCommit) {
+                    echo "Transação $transaction realizou UNDO" . PHP_EOL;
+                    $trasactionsWithoutCommit[] = $transaction; 
+                }
             }
         }
+        return $trasactionsWithoutCommit;
     }
-    return $trasactionsWithoutCommit;
-}
 
-function getOperationsFromTransactions(array $transactions, array $lines): array {
-    $operations = [];
-    foreach ($transactions as $key => $t) {
-        $operations[] = array_filter($lines, function ($linha) use($t) {
-            return strpos($linha, "<$t") !== false;
-        });
+    private function getOperationsFromTransactions(array $transactions, array $lines): array {
+        $operations = [];
+        foreach ($transactions as $key => $t) {
+            $operations[] = array_filter($lines, function ($linha) use($t) {
+                return strpos($linha, "<$t") !== false;
+            });
+        }
+        
+        return $operations;
     }
-    
-    return $operations;
-}
 
-function handleUndoOperations(array $operations) {
-    foreach ($operations as $operation) {
-        $pattern = '/<([^>]*)>/'; 
+    private function handleUndoOperations(array $operations) {
+        foreach ($operations as $operation) {
+            $pattern = '/<([^>]*)>/'; 
 
-        $firstTransaction = end($operation);
-        [$transaction, $id, $column, $value] = explode(',', $firstTransaction);
-        $undoSQL = "UPDATE teste SET $column = $value WHERE id = $id";
-        pg_query($db->connection, $undoSQL);
+            $firstTransaction = end($operation);
+            $hasMatch = preg_match($pattern, $firstTransaction, $matches);
+            if ($hasMatch) {
+                $match = $matches[1];
+                if (!empty($match)) {
+                    [$transaction, $id, $column, $value] = explode(',', $matches[1]);
+                    $column = trim($column);
+                    echo "Transacao: $transaction \n $id  \n $column \n $value\n ";
+                    $undoSQL = "UPDATE teste SET $column = $value WHERE id = $id";
+                // pg_query($db->connection, $undoSQL);
+                }
+            }
+        }
     }
 }
