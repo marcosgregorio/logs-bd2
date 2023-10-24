@@ -8,7 +8,7 @@ final class Script {
     private Log $log;
     private array $trasactionsWithoutCommit;
     private array $operationsWithoutCommit;
-
+    
     public function __construct(Type $var = null) {
         $this->createTableFromMetaData();
     }
@@ -39,6 +39,15 @@ final class Script {
         $str = implode($lines);
         foreach ($lines as $key => $line) {
             $line = trim($line);
+            if (strpos($line, "START CKPT")) {
+                $transaction = substr($line, -3, 2);
+                $regex = "/<END CKPT>/";
+                $haveEndCheckpoint = preg_match($regex, $str);
+                if ($haveEndCheckpoint) {
+                    echo "Possue um end checkpoint." . PHP_EOL;
+                    break;
+                }
+            }
             if (strpos($line, "start")) {
                 $transaction = substr($line, -3, 2);
                 $regex = "/<commit $transaction>/";
@@ -76,7 +85,7 @@ final class Script {
                     $column = trim($column);
                     echo "Transacao: $transaction, id: $id, coluna: $column, valor: $value\n ";
                     $undoSQL = "UPDATE teste SET $column = $value WHERE id = $id";
-                // pg_query($db->connection, $undoSQL);
+                    pg_query($this->db->getConnection(), $undoSQL);
                 }
             }
         }

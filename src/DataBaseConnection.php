@@ -15,7 +15,9 @@ final class DataBaseConnection {
             or die("Não foi possível se conectar ao banco de dados.");
         $this->createDefaultTable();        
     }
-
+    public function getConnection() {
+        return $this->connection;
+    }
     private function createDefaultTable(): void {
         $this->dropTableTeste();
 
