@@ -6,7 +6,3 @@ require_once 'Script.php';
 
 $script = new Script();
 $script->readLogFile();
-// $cli = new Cli();
-// $cli->description('Implementa o mecanismo de log Redo com checkpoint usando o SGBD')
-// ->opt('metadata:l', 'Caminho para um arquivo JSON com os dados para serem inseridos no SGBD.')
-// ->opt('log:l', 'Caminho para um arquivo com os logs.');
